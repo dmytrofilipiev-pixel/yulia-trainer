@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#F2EDE6">
-  <title>аУра — тренер</title>
+  <title>Ліна — тренер</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -253,21 +253,19 @@
 </head>
 <body>
 
-<!-- ── WELCOME ───────────────────────────────── -->
 <div class="screen" id="welcome">
   <div class="welcome-plant">🌿</div>
   <h1 class="welcome-title">Привіт, Юля</h1>
-  <p class="welcome-sub">Я аУра — твій персональний тренер для здоров'я та довголіття</p>
+  <p class="welcome-sub">Я Ліна — твій персональний тренер для здоров'я та довголіття</p>
   <p class="welcome-tags">Лімфодренаж · Суглоби · Рухомість</p>
   <button class="btn-start" id="btnStart">Почати сесію</button>
   <p class="welcome-hint">Додай на головний екран як застосунок</p>
 </div>
 
-<!-- ── SESSION ───────────────────────────────── -->
 <div class="screen hidden" id="session">
 
   <div class="header">
-    <div class="header-name"><span>🌿</span> аУра</div>
+    <div class="header-name"><span>🌿</span> Ліна</div>
     <div class="status-badge" id="badge">Готова</div>
   </div>
 
@@ -309,7 +307,7 @@
 // ── CONFIG ──────────────────────────────────────
 const PROXY_URL = 'https://yulia-trainer-proxy.dmytrofilipiev.workers.dev';
 
-const SYSTEM_PROMPT = `Ти аУра — тепла персональна тренер Юлі (43 роки).
+const SYSTEM_PROMPT = `Ти Ліна — тепла персональна тренер Юлі (43 роки).
 
 Місія: вести живі сесії фізіотерапії для здоров'я та довголіття. Ти пам'ятаєш все що Юля казала в цій сесії.
 
@@ -326,7 +324,7 @@ const SYSTEM_PROMPT = `Ти аУра — тепла персональна тр�
 4. Якщо боляче або втомилась — адаптуй одразу
 5. Стиль: тепла подруга, не строга інструктор
 
-Початок: привітай → запитай як почується → запропонуй план 5/10/20 хвилин → веди крок за кроком
+Початок: привітай → запитай як почувається → запропонуй план 5/10/20 хвилин → веди крок за кроком
 
 Формат: якщо ведеш вправу, в КІНЦІ відповіді додай рядок:
 [ВПРАВА: назва | emoji | тривалість]
@@ -371,22 +369,18 @@ function setStatus(s) {
   status = s;
   const c = SC[s];
 
-  // Badge
   badge.textContent = c.badge;
   badge.style.background = c.color + '18';
   badge.style.color = c.color;
   badge.style.border = `1px solid ${c.color}30`;
 
-  // Circle color
   circleMain.style.background = `radial-gradient(circle at 38% 38%, ${c.color}22, ${c.color}0d)`;
   circleMain.style.borderColor = c.color + '44';
   circleMain.style.boxShadow = `0 8px 40px ${c.color}22, inset 0 1px 0 rgba(255,255,255,.6)`;
 
-  // Rings
   ringOuter.style.borderColor = c.color;
   ringInner.style.borderColor = c.color;
 
-  // Ring animations
   if (s === 'idle') {
     ringOuter.style.animation = 'breatheIdle 3.5s ease-in-out infinite';
     ringInner.style.animation = 'breatheIdle 3.5s ease-in-out .5s infinite';
@@ -401,17 +395,11 @@ function setStatus(s) {
     ringInner.style.animation = 'none';
   }
 
-  // Spinner
   spinnerRing.classList.toggle('hidden', s !== 'processing');
-
-  // Mic icon
   micIcon.textContent = c.mic;
   micIcon.style.opacity = s === 'processing' ? '0' : '1';
-
-  // Hint
   hint.textContent = c.hint;
 
-  // Dots
   dots.classList.toggle('hidden', s !== 'processing');
   bubbleText.style.display = s === 'processing' ? 'none' : 'block';
 }
@@ -452,42 +440,57 @@ if (SR) {
   };
 }
 
-// ── NEURAL SPEECH SYNTHESIS (OPENAI TTS VIA PROXY) ──
-async function speak(text) {
-  return new Promise(async (resolve) => {
-    try {
-      setStatus('speaking');
-      
-      // Надсилаємо запит на озвучення тексту через Cloudflare Worker
-      const res = await fetch(PROXY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tts: text })
-      });
-      
-      if (!res.ok) throw new Error('TTS response error');
-      
-      const blob = await res.blob();
-      const audioUrl = URL.createObjectURL(blob);
-      const audio = new Audio(audioUrl);
-      
-      window.currentAudio = audio;
-      
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        resolve();
-      };
-      
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        resolve();
-      };
-      
-      audio.play();
-    } catch (err) {
-      console.error('TTS Error:', err);
-      resolve(); // Повертаємо у стійкий стан навіть у разі збою звуку
-    }
+// ── NATIVE SPEECH SYNTHESIS WITH iOS UNLOCK ──
+function getBestVoice() {
+  const voices = speechSynthesis.getVoices();
+  return voices.find(v => v.lang.startsWith('uk')) ||
+         voices.find(v => v.lang.startsWith('ru')) ||
+         voices[0] || null;
+}
+
+// Функція примусового пробудження аудіо-рушія за користувацьким кліком
+function unlockAudioContext() {
+  try {
+    const silentUtterance = new SpeechSynthesisUtterance('');
+    silentUtterance.volume = 0;
+    speechSynthesis.speak(silentUtterance);
+  } catch (e) {
+    console.warn('Audio unlock failed', e);
+  }
+}
+
+function speak(text) {
+  return new Promise(resolve => {
+    speechSynthesis.cancel();
+    
+    const u = new SpeechSynthesisUtterance(text);
+    const voice = getBestVoice();
+    if (voice) u.voice = voice;
+    
+    u.lang  = 'uk-UA';
+    u.rate  = 0.88;
+    u.pitch = 1.05;
+    
+    u.onend = () => {
+      setStatus('idle');
+      resolve();
+    };
+    u.onerror = () => {
+      setStatus('idle');
+      resolve();
+    };
+    
+    setStatus('speaking');
+    speechSynthesis.speak(u);
+    
+    // Специфічний фікс для деяких версій Chrome/Safari, де довгі фрази обриваються через 15 секунд
+    const r = setInterval(() => {
+      if (status !== 'speaking') {
+        clearInterval(r);
+      } else {
+        speechSynthesis.resume();
+      }
+    }, 10000);
   });
 }
 
@@ -532,9 +535,7 @@ async function callChatGPT(userText) {
     messages.push({ role: 'assistant', content: full });
     bubbleText.textContent = spoken;
 
-    // Викликаємо нову нейромережеву озвучку
     await speak(spoken);
-    setStatus('idle');
 
   } catch(err) {
     console.error(err);
@@ -546,11 +547,11 @@ async function callChatGPT(userText) {
 
 // ── MIC BUTTON ───────────────────────────────────
 circleBtn.addEventListener('click', () => {
+  // Розблоковуємо аудіо-чергу під час кожного кліку на кнопку
+  unlockAudioContext();
+
   if (status === 'speaking') {
-    // Зупиняємо аудіопотік преміального голосу при натисканні
-    if (window.currentAudio) {
-      window.currentAudio.pause();
-    }
+    speechSynthesis.cancel();
     setStatus('idle');
     return;
   }
@@ -563,8 +564,16 @@ circleBtn.addEventListener('click', () => {
 
 // ── START SESSION ────────────────────────────────
 $('btnStart').addEventListener('click', () => {
+  // Первинне розблокування звуку на пристрої за першим тапом
+  unlockAudioContext();
+
   welcome.classList.add('hidden');
   session.classList.remove('hidden');
+
+  // Ініціалізація голосів для мобільних систем
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
   callChatGPT('Привіт! Я готова починати.');
 });
 
