@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#F2EDE6">
-  <title>Кращий тренер — тренер</title>
+  <title>Ліна — тренер</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -232,7 +232,7 @@
     }
     @keyframes dotBounce {
       0%,80%,100% { transform: translateY(0);   opacity: .35; }
-      40%         { transform: translateY(-8px); opacity: 1;   }
+      40%          { transform: translateY(-8px); opacity: 1;   }
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
@@ -253,7 +253,6 @@
 </head>
 <body>
 
-<!-- ── WELCOME ───────────────────────────────── -->
 <div class="screen" id="welcome">
   <div class="welcome-plant">🌿</div>
   <h1 class="welcome-title">Привіт, Юля</h1>
@@ -263,7 +262,6 @@
   <p class="welcome-hint">Додай на головний екран як застосунок</p>
 </div>
 
-<!-- ── SESSION ───────────────────────────────── -->
 <div class="screen hidden" id="session">
 
   <div class="header">
@@ -307,7 +305,6 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────
-// ⚠️ Замін на свій Render URL після деплою
 const PROXY_URL = 'https://yulia-trainer-proxy.dmytrofilipiev.workers.dev';
 
 const SYSTEM_PROMPT = `Ти Ліна — тепла персональна тренер Юлі (43 роки).
@@ -340,10 +337,10 @@ let currentTranscript = '';
 
 // ── STATUS CONFIG ───────────────────────────────
 const SC = {
-  idle:       { color: '#5B8A72', badge: 'Говори зі мною',    mic: '🎤', hint: 'Натисни коло і говори'    },
-  listening:  { color: '#E8834F', badge: 'Слухаю тебе…',      mic: '👂', hint: 'Говори…'                  },
+  idle:       { color: '#5B8A72', badge: 'Говори зі мною',    mic: '🎤', hint: 'Натисни коло і говори'   },
+  listening:  { color: '#E8834F', badge: 'Слухаю тебе…',     mic: '👂', hint: 'Говори…'                  },
   processing: { color: '#C9A05A', badge: 'Думаю…',            mic: '✦',  hint: 'Зачекай…'                 },
-  speaking:   { color: '#6B93B2', badge: 'Ліна говорить',     mic: '⏹', hint: 'Натисни щоб перервати'    },
+  speaking:   { color: '#6B93B2', badge: 'Ліна говорить',      mic: '⏹', hint: 'Натисни щоб перервати'    },
 };
 
 // ── DOM ─────────────────────────────────────────
@@ -488,7 +485,7 @@ async function callClaude(userText) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages: messages,
