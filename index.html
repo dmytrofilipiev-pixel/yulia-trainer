@@ -313,7 +313,7 @@ const SYSTEM_PROMPT = `Ти Ліна — тепла персональна тр�
 
 Програма:
 - Лімфодренаж: діафрагмальне дихання, ритмічні рухи
-- Суглоби: повний діапазон, живлення хряща
+- Суглоби: повний диапазон, живлення хряща
 - Фасції: реліз напруги
 - Координація: баланс, стабілізація
 
@@ -333,7 +333,6 @@ const SYSTEM_PROMPT = `Ти Ліна — тепла персональна тр�
 // ── STATE ───────────────────────────────────────
 let status = 'idle';   // idle | listening | processing | speaking
 let messages = [];
-let currentTranscript = '';
 
 // ── STATUS CONFIG ───────────────────────────────
 const SC = {
@@ -355,7 +354,6 @@ const exerciseCard = $('exerciseCard');
 const exEmoji    = $('exEmoji');
 const exName     = $('exName');
 const exDur      = $('exDur');
-const circleBtn  = $('circleBtn'); // Виправлено помилку з ['circleBtn']
 const circleMain = $('circleMain');
 const ringOuter  = $('ringOuter');
 const ringInner  = $('ringInner');
@@ -423,7 +421,6 @@ if (SR) {
 
   recognition.onresult = e => {
     const text = e.results[0][0].transcript;
-    currentTranscript = text;
     transcript.textContent = `«${text}»`;
     transcript.classList.remove('hidden');
     callChatGPT(text);
@@ -440,40 +437,26 @@ if (SR) {
   };
 }
 
-// ── STABLE NATIVE SPEECH SYNTHESIS ──
+// ── ORIGINAL NATIVE SPEECH SYNTHESIS ──
 function speak(text) {
-  return new Promise(resolve => {
-    speechSynthesis.cancel();
-    
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang  = 'uk-UA';
-    u.rate  = 0.90;
-    u.pitch = 1.0;
-    
-    const fallbackTimeout = setTimeout(() => {
-      if (status === 'speaking') {
-        console.warn('TTS stuck fallback triggered');
-        setStatus('idle');
-        resolve();
-      }
-    }, 8000);
+  speechSynthesis.cancel();
+  
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang  = 'uk-UA';
+  u.rate  = 0.90;
+  u.pitch = 1.0;
+  
+  u.onend = () => {
+    setStatus('idle');
+  };
 
-    u.onend = () => {
-      clearTimeout(fallbackTimeout);
-      setStatus('idle');
-      resolve();
-    };
-
-    u.onerror = (e) => {
-      clearTimeout(fallbackTimeout);
-      console.error('TTS error:', e);
-      setStatus('idle');
-      resolve();
-    };
-    
-    setStatus('speaking');
-    speechSynthesis.speak(u);
-  });
+  u.onerror = (e) => {
+    console.error('TTS error:', e);
+    setStatus('idle');
+  };
+  
+  setStatus('speaking');
+  speechSynthesis.speak(u);
 }
 
 // ── CALL CHATGPT ─────────────────────────────────
@@ -517,7 +500,8 @@ async function callChatGPT(userText) {
     messages.push({ role: 'assistant', content: full });
     bubbleText.textContent = spoken;
 
-    await speak(spoken);
+    // Прямий виклик озвучки
+    speak(spoken);
 
   } catch(err) {
     console.error(err);
@@ -528,7 +512,8 @@ async function callChatGPT(userText) {
 }
 
 // ── MIC BUTTON ───────────────────────────────────
-circleBtn.addEventListener('click', () => {
+$('circleBtn').addEventListener('click', () => {
+  // Просте розблокування аудіо при кожному кліку
   try { speechSynthesis.speak(new SpeechSynthesisUtterance('')); } catch(e){}
 
   if (status === 'speaking') {
