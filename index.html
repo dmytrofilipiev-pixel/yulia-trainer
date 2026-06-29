@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#F2EDE6">
+  <title>Ліна — тренер</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #F2EDE6;
+      --card:   #FAFAF7;
+      --deep:   #1C3528;
+      --jade:   #5B8A72;
+      --coral:  #E8834F;
+      --blue:   #6B93B2;
+      --gold:   #C9A05A;
+      --muted:  #8EA898;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* ── SCREENS ──────────────────────────────── */
+    .screen {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: env(safe-area-inset-top, 20px) 24px env(safe-area-inset-bottom, 24px);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .screen.hidden { opacity: 0; pointer-events: none; transform: scale(.97); }
+
+    /* ── WELCOME ──────────────────────────────── */
+    #welcome { text-align: center; gap: 0; }
+
+    .welcome-plant { font-size: 64px; line-height: 1; margin-bottom: 24px; }
+
+    .welcome-title {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 40px; font-weight: 400;
+      color: var(--deep); letter-spacing: .5px;
+      margin-bottom: 10px;
+    }
+
+    .welcome-sub {
+      color: var(--muted); font-size: 16px; font-weight: 300;
+      line-height: 1.65; max-width: 280px; margin-bottom: 8px;
+    }
+
+    .welcome-tags {
+      color: var(--muted); font-size: 11px;
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 52px;
+    }
+
+    .btn-start {
+      background: var(--jade); color: #fff;
+      border: none; border-radius: 60px;
+      padding: 18px 56px; font-size: 17px;
+      font-family: 'Inter', sans-serif; font-weight: 500;
+      cursor: pointer; letter-spacing: .3px;
+      box-shadow: 0 8px 28px rgba(91,138,114,.4);
+      touch-action: manipulation;
+      transition: transform .15s;
+    }
+    .btn-start:active { transform: scale(.97); }
+
+    .welcome-hint {
+      color: #ccc; font-size: 12px; margin-top: 28px;
+    }
+
+    /* ── SESSION ──────────────────────────────── */
+    #session {
+      justify-content: flex-start;
+      padding-top: max(env(safe-area-inset-top), 20px);
+      gap: 14px;
+    }
+
+    /* Header */
+    .header {
+      width: 100%; max-width: 420px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header-name {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--deep);
+    }
+    .status-badge {
+      font-size: 11px; font-weight: 500; letter-spacing: .3px;
+      padding: 5px 14px; border-radius: 20px;
+      transition: background .4s, color .4s, border-color .4s;
+    }
+
+    /* Exercise card */
+    .exercise-card {
+      width: 100%; max-width: 420px;
+      background: var(--card);
+      border-radius: 20px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.05);
+      animation: fadeIn .4s ease;
+    }
+    .exercise-emoji { font-size: 44px; flex-shrink: 0; }
+    .exercise-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 19px; color: var(--deep); line-height: 1.2;
+    }
+    .exercise-dur {
+      color: var(--muted); font-size: 13px; margin-top: 3px;
+    }
+    .exercise-card.hidden { display: none; }
+
+    /* Text bubble */
+    .bubble {
+      width: 100%; max-width: 420px;
+      background: var(--card); border-radius: 20px;
+      padding: 20px 22px; min-height: 100px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 16px rgba(0,0,0,.05);
+    }
+    .bubble-text {
+      color: var(--deep); font-size: 17px;
+      font-weight: 300; line-height: 1.75;
+      text-align: center;
+    }
+
+    /* Dots loader */
+    .dots { display: flex; gap: 8px; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--jade);
+      animation: dotBounce 1.1s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: .18s; }
+    .dot:nth-child(3) { animation-delay: .36s; }
+
+    /* Transcript */
+    .transcript {
+      color: var(--muted); font-size: 13px;
+      font-style: italic; text-align: center;
+      max-width: 360px; animation: fadeIn .3s ease;
+    }
+    .transcript.hidden { display: none; }
+
+    /* Spacer */
+    .spacer { flex: 1; min-height: 8px; }
+
+    /* Breathing circle */
+    .circle-wrap {
+      position: relative;
+      width: 200px; height: 200px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    .ring {
+      position: absolute; border-radius: 50%;
+      pointer-events: none;
+    }
+    .ring-outer {
+      inset: -24px;
+      border: 2px solid var(--jade);
+      animation: breatheIdle 3.5s ease-in-out infinite;
+    }
+    .ring-inner {
+      inset: -12px;
+      border: 1.5px solid var(--jade);
+      opacity: .4;
+      animation: breatheIdle 3.5s ease-in-out .5s infinite;
+    }
+
+    .circle-main {
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, rgba(91,138,114,.13), rgba(91,138,114,.07));
+      border: 2px solid rgba(91,138,114,.3);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .5s, border-color .5s, box-shadow .5s;
+      box-shadow: 0 8px 40px rgba(91,138,114,.15), inset 0 1px 0 rgba(255,255,255,.6);
+    }
+
+    .spinner-ring {
+      position: absolute;
+      inset: 8px; border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--gold);
+      animation: thinkSpin .9s linear infinite;
+      pointer-events: none;
+    }
+    .spinner-ring.hidden { display: none; }
+
+    .mic-icon { font-size: 44px; line-height: 1; transition: opacity .3s; }
+
+    .hint {
+      color: #bbb; font-size: 12px;
+      letter-spacing: .5px; text-align: center;
+    }
+
+    /* ── ANIMATIONS ─────────────────────────── */
+    @keyframes breatheIdle {
+      0%,100% { transform: scale(1);    opacity: .18; }
+      50%      { transform: scale(1.08); opacity: .28; }
+    }
+    @keyframes rippleListen {
+      0%   { transform: scale(1);   opacity: .5; }
+      100% { transform: scale(1.9); opacity: 0; }
+    }
+    @keyframes speakPulse {
+      0%,100% { transform: scale(1);    opacity: .22; }
+      25%     { transform: scale(1.05); opacity: .35; }
+      75%     { transform: scale(1.1);  opacity: .15; }
+    }
+    @keyframes thinkSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes dotBounce {
+      0%,80%,100% { transform: translateY(0);   opacity: .35; }
+      40%         { transform: translateY(-8px); opacity: 1;   }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+
+    /* ── ERROR TOAST ────────────────────────── */
+    .toast {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      background: #C06040; color: #fff;
+      padding: 10px 20px; border-radius: 16px;
+      font-size: 13px; white-space: nowrap;
+      opacity: 0; transition: opacity .3s;
+      pointer-events: none; z-index: 100;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ── WELCOME ───────────────────────────────── -->
+<div class="screen" id="welcome">
+  <div class="welcome-plant">🌿</div>
+  <h1 class="welcome-title">Привіт, Юля</h1>
+  <p class="welcome-sub">Я Ліна — твій персональний тренер для здоров'я та довголіття</p>
+  <p class="welcome-tags">Лімфодренаж · Суглоби · Рухомість</p>
+  <button class="btn-start" id="btnStart">Почати сесію</button>
+  <p class="welcome-hint">Додай на головний екран як застосунок</p>
+</div>
+
+<!-- ── SESSION ───────────────────────────────── -->
+<div class="screen hidden" id="session">
+
+  <div class="header">
+    <div class="header-name"><span>🌿</span> Ліна</div>
+    <div class="status-badge" id="badge">Готова</div>
+  </div>
+
+  <div class="exercise-card hidden" id="exerciseCard">
+    <span class="exercise-emoji" id="exEmoji">🧘</span>
+    <div>
+      <div class="exercise-name" id="exName"></div>
+      <div class="exercise-dur" id="exDur"></div>
+    </div>
+  </div>
+
+  <div class="bubble" id="bubble">
+    <div class="dots hidden" id="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <p class="bubble-text" id="bubbleText">Підготовка…</p>
+  </div>
+
+  <p class="transcript hidden" id="transcript"></p>
+
+  <div class="spacer"></div>
+
+  <div class="circle-wrap" id="circleBtn">
+    <div class="ring ring-outer" id="ringOuter"></div>
+    <div class="ring ring-inner" id="ringInner"></div>
+    <div class="circle-main" id="circleMain">
+      <div class="spinner-ring hidden" id="spinnerRing"></div>
+      <span class="mic-icon" id="micIcon">🎤</span>
+    </div>
+  </div>
+
+  <p class="hint" id="hint">Натисни коло і говори</p>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────
+// ⚠️ Замін на свій Render URL після деплою
+const PROXY_URL = 'https://YOUR-APP.onrender.com/chat';
+
+const SYSTEM_PROMPT = `Ти Ліна — тепла персональна тренер Юлі (43 роки).
+
+Місія: вести живі сесії фізіотерапії для здоров'я та довголіття. Ти пам'ятаєш все що Юля казала в цій сесії.
+
+Програма:
+- Лімфодренаж: діафрагмальне дихання, ритмічні рухи
+- Суглоби: повний діапазон, живлення хряща
+- Фасції: реліз напруги
+- Координація: баланс, стабілізація
+
+Правила:
+1. ТІЛЬКИ українська мова
+2. Короткі речення — 2-3 за раз (Юля слухає вголос)
+3. Після інструкції чекай підтвердження: "Готова?" або "Як почуваєшся?"
+4. Якщо боляче або втомилась — адаптуй одразу
+5. Стиль: тепла подруга, не строга інструктор
+
+Початок: привітай → запитай як почувається → запропонуй план 5/10/20 хвилин → веди крок за кроком
+
+Формат: якщо ведеш вправу, в КІНЦІ відповіді додай рядок:
+[ВПРАВА: назва | emoji | тривалість]
+Якщо просто розмовляєш — нічого не додавай.`;
+
+// ── STATE ───────────────────────────────────────
+let status = 'idle';   // idle | listening | processing | speaking
+let messages = [];
+let currentTranscript = '';
+
+// ── STATUS CONFIG ───────────────────────────────
+const SC = {
+  idle:       { color: '#5B8A72', badge: 'Говори зі мною',    mic: '🎤', hint: 'Натисни коло і говори'    },
+  listening:  { color: '#E8834F', badge: 'Слухаю тебе…',      mic: '👂', hint: 'Говори…'                  },
+  processing: { color: '#C9A05A', badge: 'Думаю…',            mic: '✦',  hint: 'Зачекай…'                 },
+  speaking:   { color: '#6B93B2', badge: 'Ліна говорить',     mic: '⏹', hint: 'Натисни щоб перервати'    },
+};
+
+// ── DOM ─────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const welcome    = $('welcome');
+const session    = $('session');
+const badge      = $('badge');
+const dots       = $('dots');
+const bubbleText = $('bubbleText');
+const transcript = $('transcript');
+const exerciseCard = $('exerciseCard');
+const exEmoji    = $('exEmoji');
+const exName     = $('exName');
+const exDur      = $('exDur');
+const circleBtn  = $('circleBtn');
+const circleMain = $('circleMain');
+const ringOuter  = $('ringOuter');
+const ringInner  = $('ringInner');
+const spinnerRing= $('spinnerRing');
+const micIcon    = $('micIcon');
+const hint       = $('hint');
+const toast      = $('toast');
+
+// ── SET STATUS ──────────────────────────────────
+function setStatus(s) {
+  status = s;
+  const c = SC[s];
+
+  // Badge
+  badge.textContent = c.badge;
+  badge.style.background = c.color + '18';
+  badge.style.color = c.color;
+  badge.style.border = `1px solid ${c.color}30`;
+
+  // Circle color
+  circleMain.style.background = `radial-gradient(circle at 38% 38%, ${c.color}22, ${c.color}0d)`;
+  circleMain.style.borderColor = c.color + '44';
+  circleMain.style.boxShadow = `0 8px 40px ${c.color}22, inset 0 1px 0 rgba(255,255,255,.6)`;
+
+  // Rings
+  ringOuter.style.borderColor = c.color;
+  ringInner.style.borderColor = c.color;
+
+  // Ring animations
+  if (s === 'idle') {
+    ringOuter.style.animation = 'breatheIdle 3.5s ease-in-out infinite';
+    ringInner.style.animation = 'breatheIdle 3.5s ease-in-out .5s infinite';
+  } else if (s === 'listening') {
+    ringOuter.style.animation = 'rippleListen 1.2s ease-out infinite';
+    ringInner.style.animation = 'rippleListen 1.2s ease-out .3s infinite';
+  } else if (s === 'speaking') {
+    ringOuter.style.animation = 'speakPulse 1.8s ease-in-out infinite';
+    ringInner.style.animation = 'speakPulse 1.8s ease-in-out .4s infinite';
+  } else {
+    ringOuter.style.animation = 'none';
+    ringInner.style.animation = 'none';
+  }
+
+  // Spinner
+  spinnerRing.classList.toggle('hidden', s !== 'processing');
+
+  // Mic icon
+  micIcon.textContent = c.mic;
+  micIcon.style.opacity = s === 'processing' ? '0' : '1';
+
+  // Hint
+  hint.textContent = c.hint;
+
+  // Dots
+  dots.classList.toggle('hidden', s !== 'processing');
+  bubbleText.style.display = s === 'processing' ? 'none' : 'block';
+}
+
+// ── SHOW TOAST ──────────────────────────────────
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ── SPEECH RECOGNITION ──────────────────────────
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+
+if (SR) {
+  recognition = new SR();
+  recognition.lang = 'uk-UA';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = e => {
+    const text = e.results[0][0].transcript;
+    currentTranscript = text;
+    transcript.textContent = `«${text}»`;
+    transcript.classList.remove('hidden');
+    callClaude(text);
+  };
+
+  recognition.onerror = e => {
+    console.warn('SR error:', e.error);
+    if (e.error === 'not-allowed') showToast('Дозволь доступ до мікрофону');
+    setStatus('idle');
+  };
+
+  recognition.onend = () => {
+    if (status === 'listening') setStatus('idle');
+  };
+}
+
+// ── SPEECH SYNTHESIS ────────────────────────────
+function getBestVoice() {
+  const voices = speechSynthesis.getVoices();
+  return voices.find(v => v.lang.startsWith('uk')) ||
+         voices.find(v => v.lang.startsWith('ru')) ||
+         voices[0] || null;
+}
+
+function speak(text) {
+  return new Promise(resolve => {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const voice = getBestVoice();
+    if (voice) u.voice = voice;
+    u.lang  = 'uk-UA';
+    u.rate  = 0.88;
+    u.pitch = 1.05;
+    u.onend   = resolve;
+    u.onerror = resolve;
+    setStatus('speaking');
+    speechSynthesis.speak(u);
+  });
+}
+
+// ── CALL CLAUDE ─────────────────────────────────
+async function callClaude(userText) {
+  messages.push({ role: 'user', content: userText });
+  setStatus('processing');
+  bubbleText.textContent = '';
+
+  try {
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: messages,
+      }),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const full = data.content?.[0]?.text ?? '';
+
+    // Parse exercise
+    let spoken = full;
+    const m = full.match(/\[ВПРАВА:\s*([^|]+)\|\s*([^|]+)\|\s*([^\]]+)\]/);
+    if (m) {
+      exEmoji.textContent = m[2].trim();
+      exName.textContent  = m[1].trim();
+      exDur.textContent   = '⏱ ' + m[3].trim();
+      exerciseCard.classList.remove('hidden');
+      spoken = full.replace(m[0], '').trim();
+    }
+
+    messages.push({ role: 'assistant', content: full });
+    bubbleText.textContent = spoken;
+
+    await speak(spoken);
+    setStatus('idle');
+
+  } catch(err) {
+    console.error(err);
+    bubbleText.textContent = 'Помилка зв\'язку. Спробуй ще.';
+    setStatus('idle');
+    showToast('⚠️ Немає зв\'язку з сервером');
+  }
+}
+
+// ── MIC BUTTON ───────────────────────────────────
+circleBtn.addEventListener('click', () => {
+  if (status === 'speaking') {
+    speechSynthesis.cancel();
+    setStatus('idle');
+    return;
+  }
+  if (status === 'idle' && recognition) {
+    setStatus('listening');
+    try { recognition.start(); }
+    catch(e) { setStatus('idle'); }
+  }
+});
+
+// ── START SESSION ────────────────────────────────
+$('btnStart').addEventListener('click', () => {
+  welcome.classList.add('hidden');
+  session.classList.remove('hidden');
+
+  // Load voices (Android async)
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+  callClaude('Привіт! Я готова починати.');
+});
+
+// ── SERVICE WORKER ───────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
