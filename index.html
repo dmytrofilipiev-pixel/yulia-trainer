@@ -307,7 +307,7 @@
 // ── CONFIG ──────────────────────────────────────
 const PROXY_URL = 'https://yulia-trainer-proxy.dmytrofilipiev.workers.dev';
 
-const SYSTEM_PROMPT = `Ти Ліна — тепла персональна тренер Юлі (43 роки).
+const SYSTEM_PROMPT = `Ти Аура — тепла персональна тренер Юлі (43 роки).
 
 Місія: вести живі сесії фізіотерапії для здоров'я та довголіття. Ти пам'ятаєш все що Юля казала в цій сесії.
 
@@ -436,7 +436,7 @@ if (SR) {
     currentTranscript = text;
     transcript.textContent = `«${text}»`;
     transcript.classList.remove('hidden');
-    callClaude(text);
+    callChatGPT(text);
   };
 
   recognition.onerror = e => {
@@ -474,27 +474,34 @@ function speak(text) {
   });
 }
 
-// ── CALL CLAUDE ─────────────────────────────────
-async function callClaude(userText) {
+// ── CALL CHATGPT ─────────────────────────────────
+async function callChatGPT(userText) {
   messages.push({ role: 'user', content: userText });
   setStatus('processing');
   bubbleText.textContent = '';
 
   try {
+    // Формуємо правильний масив повідомлень для OpenAI, де SYSTEM_PROMPT йде першим
+    const openAIMessages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...messages
+    ];
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'gpt-4o', 
         max_tokens: 1000,
-        system: SYSTEM_PROMPT,
-        messages: messages,
+        messages: openAIMessages,
       }),
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const full = data.content?.[0]?.text ?? '';
+    
+    // Отримуємо текст відповіді відповідно до структури даних OpenAI API
+    const full = data.choices?.[0]?.message?.content ?? '';
 
     // Parse exercise
     let spoken = full;
@@ -544,7 +551,7 @@ $('btnStart').addEventListener('click', () => {
   speechSynthesis.getVoices();
   speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 
-  callClaude('Привіт! Я готова починати.');
+  callChatGPT('Привіт! Я готова починати.');
 });
 
 // ── SERVICE WORKER ───────────────────────────────
