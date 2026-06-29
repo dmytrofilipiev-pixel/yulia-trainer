@@ -35,7 +35,6 @@
       user-select: none;
     }
 
-    /* ── SCREENS ─────────────────────────────── */
     .screen {
       position: fixed; inset: 0;
       display: flex; flex-direction: column;
@@ -45,7 +44,6 @@
     }
     .screen.hidden { opacity: 0; pointer-events: none; transform: scale(.97); }
 
-    /* ── WELCOME ─────────────────────────────── */
     #welcome { text-align: center; }
     .welcome-plant { font-size: 64px; line-height: 1; margin-bottom: 24px; }
     .welcome-title {
@@ -73,7 +71,6 @@
     .btn-start:active { transform: scale(.97); }
     .welcome-hint { color: #ccc; font-size: 12px; margin-top: 28px; }
 
-    /* ── SESSION ─────────────────────────────── */
     #session {
       justify-content: flex-start;
       padding-top: max(env(safe-area-inset-top), 20px);
@@ -94,7 +91,6 @@
       transition: background .4s, color .4s, border-color .4s;
     }
 
-    /* Exercise card */
     .exercise-card {
       width: 100%; max-width: 420px;
       background: var(--card); border-radius: 20px;
@@ -110,7 +106,6 @@
     }
     .exercise-dur { color: var(--muted); font-size: 13px; margin-top: 3px; }
 
-    /* Bubble */
     .bubble {
       width: 100%; max-width: 420px;
       background: var(--card); border-radius: 20px;
@@ -123,7 +118,6 @@
       font-weight: 300; line-height: 1.75; text-align: center;
     }
 
-    /* Dots loader */
     .dots { display: flex; gap: 8px; }
     .dot {
       width: 10px; height: 10px; border-radius: 50%; background: var(--jade);
@@ -132,7 +126,6 @@
     .dot:nth-child(2) { animation-delay: .18s; }
     .dot:nth-child(3) { animation-delay: .36s; }
 
-    /* Transcript */
     .transcript {
       color: var(--muted); font-size: 13px;
       font-style: italic; text-align: center;
@@ -142,7 +135,6 @@
 
     .spacer { flex: 1; min-height: 8px; }
 
-    /* Breathing circle */
     .circle-wrap {
       position: relative; width: 200px; height: 200px;
       display: flex; align-items: center; justify-content: center;
@@ -172,10 +164,8 @@
     }
     .spinner-ring.hidden { display: none; }
     .mic-icon { font-size: 44px; line-height: 1; transition: opacity .3s; }
-
     .hint { color: #bbb; font-size: 12px; letter-spacing: .5px; text-align: center; }
 
-    /* ── ANIMATIONS ──────────────────────────── */
     @keyframes breatheIdle {
       0%,100% { transform: scale(1);    opacity: .18; }
       50%      { transform: scale(1.08); opacity: .28; }
@@ -199,7 +189,6 @@
       to   { opacity: 1; transform: translateY(0);   }
     }
 
-    /* Toast */
     .toast {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
       background: #C06040; color: #fff; padding: 10px 20px; border-radius: 16px;
@@ -211,7 +200,6 @@
 </head>
 <body>
 
-<!-- ── WELCOME ──────────────────────────────────── -->
 <div class="screen" id="welcome">
   <div class="welcome-plant">🌿</div>
   <h1 class="welcome-title">Привіт, Юля</h1>
@@ -221,9 +209,7 @@
   <p class="welcome-hint">Додай на головний екран як застосунок</p>
 </div>
 
-<!-- ── SESSION ──────────────────────────────────── -->
 <div class="screen hidden" id="session">
-
   <div class="header">
     <div class="header-name"><span>🌿</span> Ліна</div>
     <div class="status-badge" id="badge">Готова</div>
@@ -245,7 +231,6 @@
   </div>
 
   <p class="transcript hidden" id="transcript"></p>
-
   <div class="spacer"></div>
 
   <div class="circle-wrap" id="circleBtn">
@@ -289,11 +274,9 @@ const SYSTEM_PROMPT = `Ти Ліна — тепла персональна тр�
 [ВПРАВА: назва | emoji | тривалість]
 Якщо просто розмовляєш — нічого не додавай.`;
 
-// ── STATE ─────────────────────────────────────────
 let status   = 'idle';
 let messages = [];
 
-// ── STATUS CONFIG ─────────────────────────────────
 const SC = {
   idle:       { color: '#5B8A72', badge: 'Говори зі мною',   mic: '🎤', hint: 'Натисни коло і говори'  },
   listening:  { color: '#E8834F', badge: 'Слухаю тебе…',     mic: '👂', hint: 'Говори…'                },
@@ -301,8 +284,7 @@ const SC = {
   speaking:   { color: '#6B93B2', badge: 'Ліна говорить',     mic: '⏹', hint: 'Натисни щоб перервати'  },
 };
 
-// ── DOM ───────────────────────────────────────────
-const $        = id => document.getElementById(id);
+const $          = id => document.getElementById(id);
 const badge      = $('badge');
 const dots       = $('dots');
 const bubbleText = $('bubbleText');
@@ -319,19 +301,18 @@ const micIcon    = $('micIcon');
 const hint       = $('hint');
 const toast      = $('toast');
 
-// ── SET STATUS ────────────────────────────────────
 function setStatus(s) {
   status = s;
   const c = SC[s];
 
-  badge.textContent = c.badge;
+  badge.textContent       = c.badge;
   badge.style.background  = c.color + '18';
   badge.style.color       = c.color;
   badge.style.border      = `1px solid ${c.color}30`;
 
-  circleMain.style.background = `radial-gradient(circle at 38% 38%, ${c.color}22, ${c.color}0d)`;
+  circleMain.style.background  = `radial-gradient(circle at 38% 38%, ${c.color}22, ${c.color}0d)`;
   circleMain.style.borderColor = c.color + '44';
-  circleMain.style.boxShadow  = `0 8px 40px ${c.color}22, inset 0 1px 0 rgba(255,255,255,.6)`;
+  circleMain.style.boxShadow   = `0 8px 40px ${c.color}22, inset 0 1px 0 rgba(255,255,255,.6)`;
 
   ringOuter.style.borderColor = c.color;
   ringInner.style.borderColor = c.color;
@@ -351,21 +332,19 @@ function setStatus(s) {
   }
 
   spinnerRing.classList.toggle('hidden', s !== 'processing');
-  micIcon.textContent  = c.mic;
-  micIcon.style.opacity = s === 'processing' ? '0' : '1';
-  hint.textContent     = c.hint;
+  micIcon.textContent       = c.mic;
+  micIcon.style.opacity     = s === 'processing' ? '0' : '1';
+  hint.textContent          = c.hint;
   dots.classList.toggle('hidden', s !== 'processing');
-  bubbleText.style.display = s === 'processing' ? 'none' : 'block';
+  bubbleText.style.display  = s === 'processing' ? 'none' : 'block';
 }
 
-// ── TOAST ─────────────────────────────────────────
 function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ── SPEECH RECOGNITION ───────────────────────────
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 
@@ -381,18 +360,15 @@ if (SR) {
     transcript.classList.remove('hidden');
     callClaude(text);
   };
-
   recognition.onerror = e => {
     if (e.error === 'not-allowed') showToast('Дозволь доступ до мікрофону');
     setStatus('idle');
   };
-
   recognition.onend = () => {
     if (status === 'listening') setStatus('idle');
   };
 }
 
-// ── SPEAK — OpenAI TTS через Worker ──────────────
 async function speak(text) {
   setStatus('speaking');
   try {
@@ -401,38 +377,27 @@ async function speak(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
     });
-
     if (!res.ok) throw new Error('TTS error');
 
-    const blob = await res.blob();
+    const blob     = await res.blob();
     const audioUrl = URL.createObjectURL(blob);
-    const audio = new Audio(audioUrl);
+    const audio    = new Audio(audioUrl);
     window._currentAudio = audio;
 
-    audio.onended = () => {
-      URL.revokeObjectURL(audioUrl);
-      window._currentAudio = null;
-      setStatus('idle');
-    };
-    audio.onerror = () => {
-      window._currentAudio = null;
-      setStatus('idle');
-    };
-
+    audio.onended = () => { URL.revokeObjectURL(audioUrl); window._currentAudio = null; setStatus('idle'); };
+    audio.onerror = () => { window._currentAudio = null; setStatus('idle'); };
     await audio.play();
 
   } catch(err) {
     console.error('TTS failed, fallback to browser:', err);
-    // Fallback на браузерний TTS якщо Worker недоступний
     const u = new SpeechSynthesisUtterance(text);
-    u.lang  = 'uk-UA'; u.rate = 0.9; u.pitch = 1.05;
+    u.lang = 'uk-UA'; u.rate = 0.9; u.pitch = 1.05;
     u.onend   = () => setStatus('idle');
     u.onerror = () => setStatus('idle');
     speechSynthesis.speak(u);
   }
 }
 
-// ── CALL CLAUDE ───────────────────────────────────
 async function callClaude(userText) {
   messages.push({ role: 'user', content: userText });
   setStatus('processing');
@@ -449,12 +414,11 @@ async function callClaude(userText) {
         messages: messages,
       }),
     });
-
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const full = data.content?.[0]?.text ?? '';
 
-    // Parse exercise tag
+    const data = await res.json();
+    const full  = data.content?.[0]?.text ?? '';
+
     let spoken = full;
     const m = full.match(/\[ВПРАВА:\s*([^|]+)\|\s*([^|]+)\|\s*([^\]]+)\]/);
     if (m) {
@@ -467,43 +431,35 @@ async function callClaude(userText) {
 
     messages.push({ role: 'assistant', content: full });
     bubbleText.textContent = spoken;
-
     await speak(spoken);
 
   } catch(err) {
     console.error(err);
     bubbleText.textContent = "Помилка зв'язку. Спробуй ще.";
     setStatus('idle');
-    showToast('⚠️ Немає зв\'язку з сервером');
+    showToast("⚠️ Немає зв'язку з сервером");
   }
 }
 
-// ── MIC BUTTON ────────────────────────────────────
 $('circleBtn').addEventListener('click', () => {
   if (status === 'speaking') {
-    if (window._currentAudio) {
-      window._currentAudio.pause();
-      window._currentAudio = null;
-    }
+    if (window._currentAudio) { window._currentAudio.pause(); window._currentAudio = null; }
     speechSynthesis.cancel();
     setStatus('idle');
     return;
   }
   if (status === 'idle' && recognition) {
     setStatus('listening');
-    try { recognition.start(); }
-    catch(e) { setStatus('idle'); }
+    try { recognition.start(); } catch(e) { setStatus('idle'); }
   }
 });
 
-// ── START SESSION ─────────────────────────────────
 $('btnStart').addEventListener('click', () => {
   $('welcome').classList.add('hidden');
   $('session').classList.remove('hidden');
   callClaude('Привіт! Я готова починати.');
 });
 
-// ── SERVICE WORKER ────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
